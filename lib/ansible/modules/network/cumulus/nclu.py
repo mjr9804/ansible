@@ -194,6 +194,9 @@ def run_nclu(module, command_list, command_string, commit, atomic, abort, descri
         if atomic:
             do_abort = True
 
+    if do_abort:
+        command_helper(module, "abort")
+
     # First, look at the staged commands.
     before = check_pending(module)
     # Run all of the net commands
@@ -212,8 +215,8 @@ def run_nclu(module, command_list, command_string, commit, atomic, abort, descri
         _changed = True
         diff = {'prepared': after}
 
-    if do_abort:
-        command_helper(module, "abort")
+    if module.check_mode:
+      command_helper(module, "abort")
 
     # Do the commit.
     if do_commit:
