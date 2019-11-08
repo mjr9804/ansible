@@ -194,9 +194,6 @@ def run_nclu(module, command_list, command_string, commit, atomic, abort, descri
         if atomic:
             do_abort = True
 
-    if do_abort:
-        command_helper(module, "abort")
-
     # First, look at the staged commands.
     before = check_pending(module)
     # Run all of the net commands
@@ -207,11 +204,16 @@ def run_nclu(module, command_list, command_string, commit, atomic, abort, descri
     output = "\n".join(output_lines)
 
     # If pending changes changed, report a change.
+    diff = {}
     after = check_pending(module)
     if before == after:
         _changed = False
     else:
         _changed = True
+        diff = {'prepared': after}
+
+    if do_abort:
+        command_helper(module, "abort")
 
     # Do the commit.
     if do_commit:
@@ -222,7 +224,7 @@ def run_nclu(module, command_list, command_string, commit, atomic, abort, descri
         elif command_helper(module, "show commit last") == "":
             _changed = False
 
-    return _changed, output
+    return _changed, output, diff
 
 
 def main(testing=False):
@@ -233,6 +235,7 @@ def main(testing=False):
         abort=dict(required=False, type='bool', default=False),
         commit=dict(required=False, type='bool', default=False),
         atomic=dict(required=False, type='bool', default=False)),
+        supports_check_mode=True,
         mutually_exclusive=[('commands', 'template'),
                             ('commit', 'atomic'),
                             ('abort', 'atomic')]
@@ -244,9 +247,18 @@ def main(testing=False):
     abort = module.params.get('abort')
     description = module.params.get('description')
 
-    _changed, output = run_nclu(module, command_list, command_string, commit, atomic, abort, description)
+    if module.check_mode:
+      commit = False
+      abort = True
+
+    _changed, output, diff = run_nclu(module, command_list, command_string, commit, atomic, abort, description)
+    result = {
+      'changed': _changed,
+      'msg': output,
+      'diff': diff
+    }
     if not testing:
-        module.exit_json(changed=_changed, msg=output)
+        module.exit_json(**result)
     elif testing:
         return {"changed": _changed, "msg": output}
 
