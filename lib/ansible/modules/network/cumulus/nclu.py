@@ -57,6 +57,8 @@ options:
             - Commit description that will be recorded to the commit log if
               I(commit) or I(atomic) are true.
         default: "Ansible-originated commit"
+notes:
+    - Supports check_mode
 '''
 
 EXAMPLES = '''
@@ -213,7 +215,7 @@ def run_nclu(module, command_list, command_string, commit, atomic, abort, descri
         _changed = False
     else:
         _changed = True
-        diff = {'prepared': after}
+        diff = {"prepared": after}
 
     if module.check_mode:
       command_helper(module, "abort")
@@ -252,13 +254,12 @@ def main(testing=False):
 
     if module.check_mode:
       commit = False
-      abort = True
 
     _changed, output, diff = run_nclu(module, command_list, command_string, commit, atomic, abort, description)
     result = {
-      'changed': _changed,
-      'msg': output,
-      'diff': diff
+      "changed": _changed,
+      "msg": output,
+      "diff": diff
     }
     if not testing:
         module.exit_json(**result)
