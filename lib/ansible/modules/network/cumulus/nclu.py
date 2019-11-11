@@ -58,7 +58,7 @@ options:
               I(commit) or I(atomic) are true.
         default: "Ansible-originated commit"
 notes:
-    - Supports check_mode
+    - Supports check_mode. Note that when using check_mode, I(abort) is always true.
 '''
 
 EXAMPLES = '''
